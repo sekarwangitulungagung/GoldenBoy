@@ -37,17 +37,43 @@ Jika Anda ingin menjalankan atau mengembangkan kode ini, ikuti langkah berikut:
 
 1. **Clone atau salin kode sumber.**  
 2. **Instal dependensi melalui Terminal/CMD:**  
-   pip install PyQt6 obsws-python mido python-rtmidi
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. **Jalankan aplikasi:**  
-   python sekar\_wangi\_pro.py
+3. **Konfigurasi environment (opsional):**  
+   Edit file `.env` untuk mengatur pengaturan OBS WebSocket, MIDI port, dll.
+
+4. **Jalankan aplikasi:**  
+   ```bash
+   python main.py
+   ```
+
+## **🏗️ Struktur Proyek**
+
+```
+SekarWangi_MidiControll/
+├── main.py                 # Entry point aplikasi utama
+├── .env                    # Environment settings
+├── requirements.txt        # Python dependencies
+├── README.md              # Dokumentasi
+├── styles/
+│   └── ui_styles.py       # Styling antarmuka PyQt6
+├── logic/
+│   ├── obs_midi_handler.py # Logika OBS WebSocket & MIDI
+│   └── ui_components.py   # Komponen UI (TallyBox)
+└── arduino/
+    └── client_tally/
+        └── client_tally.ino  # Kode Arduino untuk hardware tally
+```
 
 ## **📦 Cara Membuat File Executable (.EXE)**
 
 Untuk mendistribusikan aplikasi ini sebagai software mandiri:
 
 1. Instal auto-py-to-exe.  
-2. Pilih file sekar\_wangi\_pro.py.  
+2. Pilih file `main.py` sebagai script utama.
+3. Konfigurasi build settings sesuai kebutuhan.  
 3. Pilih opsi **"Window Based"** (untuk menyembunyikan konsol hitam).  
 4. Tambahkan ikon (file .ico) untuk hasil yang lebih profesional.  
 5. Klik **Convert**.
