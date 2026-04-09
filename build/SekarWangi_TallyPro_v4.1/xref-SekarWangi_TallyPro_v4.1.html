@@ -162,6 +162,7 @@ imports:
  &#8226;   <a href="#logic.ui_components">logic.ui_components</a>
  &#8226;   <a href="#mido">mido</a>
  &#8226;   <a href="#ntpath">ntpath</a>
+ &#8226;   <a href="#obsws_python">obsws_python</a>
  &#8226;   <a href="#operator">operator</a>
  &#8226;   <a href="#os">os</a>
  &#8226;   <a href="#posixpath">posixpath</a>
@@ -175,6 +176,7 @@ imports:
  &#8226;   <a href="#re._constants">re._constants</a>
  &#8226;   <a href="#re._parser">re._parser</a>
  &#8226;   <a href="#reprlib">reprlib</a>
+ &#8226;   <a href="#rtmidi">rtmidi</a>
  &#8226;   <a href="#sre_compile">sre_compile</a>
  &#8226;   <a href="#sre_constants">sre_constants</a>
  &#8226;   <a href="#sre_parse">sre_parse</a>
@@ -266,11 +268,22 @@ imported by:
 </div>
 
 <div class="node">
+  <a name="'IPython.core'"></a>
+  <a target="code" href="" type="text/plain"><tt>'IPython.core'</tt></a>
+<span class="moduletype">MissingModule</span>  <div class="import">
+imported by:
+    <a href="#dotenv.ipython">dotenv.ipython</a>
+
+  </div>
+
+</div>
+
+<div class="node">
   <a name="'org.python'"></a>
   <a target="code" href="" type="text/plain"><tt>'org.python'</tt></a>
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
-    <a href="#copy">copy</a>
+    <a href="#pickle">pickle</a>
  &#8226;   <a href="#xml.sax">xml.sax</a>
 
   </div>
@@ -305,6 +318,17 @@ imported by:
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
     <a href="#websocket._abnf">websocket._abnf</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="IPython"></a>
+  <a target="code" href="" type="text/plain"><tt>IPython</tt></a>
+<span class="moduletype">MissingModule</span>  <div class="import">
+imported by:
+    <a href="#dotenv.ipython">dotenv.ipython</a>
 
   </div>
 
@@ -1380,6 +1404,7 @@ imported by:
     <a href="#_collections_abc">_collections_abc</a>
  &#8226;   <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#dataclasses">dataclasses</a>
+ &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
  &#8226;   <a href="#email._policybase">email._policybase</a>
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#importlib._abc">importlib._abc</a>
@@ -2582,6 +2607,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#_pickle">_pickle</a>
+ &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
  &#8226;   <a href="#encodings">encodings</a>
  &#8226;   <a href="#encodings.ascii">encodings.ascii</a>
  &#8226;   <a href="#encodings.base64_codec">encodings.base64_codec</a>
@@ -2749,6 +2775,7 @@ imported by:
  &#8226;   <a href="#concurrent.futures._base">concurrent.futures._base</a>
  &#8226;   <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#dis">dis</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#email.feedparser">email.feedparser</a>
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#importlib.metadata">importlib.metadata</a>
@@ -2938,6 +2965,7 @@ imported by:
     <a href="#_threading_local">_threading_local</a>
  &#8226;   <a href="#ast">ast</a>
  &#8226;   <a href="#asyncio.staggered">asyncio.staggered</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#getpass">getpass</a>
  &#8226;   <a href="#importlib.metadata">importlib.metadata</a>
  &#8226;   <a href="#importlib.resources._adapters">importlib.resources._adapters</a>
@@ -2981,8 +3009,8 @@ imported by:
   <a target="code" href="///C:/Program%20Files/Python311/Lib/copy.py" type="text/plain"><tt>copy</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
-    <a href="#'org.python'">'org.python'</a>
- &#8226;   <a href="#copyreg">copyreg</a>
+    <a href="#copyreg">copyreg</a>
+ &#8226;   <a href="#org">org</a>
  &#8226;   <a href="#types">types</a>
  &#8226;   <a href="#weakref">weakref</a>
 
@@ -3181,11 +3209,108 @@ imported by:
 
 <div class="node">
   <a name="dotenv"></a>
-  <a target="code" href="" type="text/plain"><tt>dotenv</tt></a>
-<span class="moduletype">MissingModule</span>  <div class="import">
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/dotenv/__init__.py" type="text/plain"><tt>dotenv</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
+imports:
+    <a href="#dotenv.ipython">dotenv.ipython</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
+ &#8226;   <a href="#typing">typing</a>
+
+  </div>
+  <div class="import">
 imported by:
-    <a href="#logic.obs_midi_handler">logic.obs_midi_handler</a>
+    <a href="#dotenv.ipython">dotenv.ipython</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
+ &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
+ &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
+ &#8226;   <a href="#logic.obs_midi_handler">logic.obs_midi_handler</a>
  &#8226;   <a href="#main.py">main.py</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="dotenv.ipython"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/dotenv/ipython.py" type="text/plain"><tt>dotenv.ipython</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#'IPython.core'">'IPython.core'</a>
+ &#8226;   <a href="#IPython">IPython</a>
+ &#8226;   <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#dotenv">dotenv</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="dotenv.main"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/dotenv/main.py" type="text/plain"><tt>dotenv.main</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#collections">collections</a>
+ &#8226;   <a href="#contextlib">contextlib</a>
+ &#8226;   <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
+ &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
+ &#8226;   <a href="#io">io</a>
+ &#8226;   <a href="#logging">logging</a>
+ &#8226;   <a href="#os">os</a>
+ &#8226;   <a href="#pathlib">pathlib</a>
+ &#8226;   <a href="#stat">stat</a>
+ &#8226;   <a href="#sys">sys</a>
+ &#8226;   <a href="#tempfile">tempfile</a>
+ &#8226;   <a href="#typing">typing</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#dotenv.ipython">dotenv.ipython</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="dotenv.parser"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/dotenv/parser.py" type="text/plain"><tt>dotenv.parser</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#codecs">codecs</a>
+ &#8226;   <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#re">re</a>
+ &#8226;   <a href="#typing">typing</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#dotenv.main">dotenv.main</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="dotenv.variables"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/dotenv/variables.py" type="text/plain"><tt>dotenv.variables</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#abc">abc</a>
+ &#8226;   <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#re">re</a>
+ &#8226;   <a href="#typing">typing</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#dotenv.main">dotenv.main</a>
 
   </div>
 
@@ -6691,7 +6816,6 @@ imports:
  &#8226;   <a href="#importlib">importlib</a>
  &#8226;   <a href="#importlib._bootstrap">importlib._bootstrap</a>
  &#8226;   <a href="#importlib._bootstrap_external">importlib._bootstrap_external</a>
- &#8226;   <a href="#importlib.machinery">importlib.machinery</a>
  &#8226;   <a href="#sys">sys</a>
  &#8226;   <a href="#warnings">warnings</a>
 
@@ -6825,8 +6949,7 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#importlib">importlib</a>
- &#8226;   <a href="#importlib.abc">importlib.abc</a>
+    <a href="#importlib.abc">importlib.abc</a>
  &#8226;   <a href="#inspect">inspect</a>
  &#8226;   <a href="#pkgutil">pkgutil</a>
  &#8226;   <a href="#py_compile">py_compile</a>
@@ -7271,6 +7394,7 @@ imported by:
  &#8226;   <a href="#bz2">bz2</a>
  &#8226;   <a href="#csv">csv</a>
  &#8226;   <a href="#dis">dis</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#email.feedparser">email.feedparser</a>
  &#8226;   <a href="#email.generator">email.generator</a>
  &#8226;   <a href="#email.iterators">email.iterators</a>
@@ -7554,6 +7678,7 @@ imported by:
     <a href="#asyncio.futures">asyncio.futures</a>
  &#8226;   <a href="#asyncio.log">asyncio.log</a>
  &#8226;   <a href="#concurrent.futures._base">concurrent.futures._base</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#hashlib">hashlib</a>
  &#8226;   <a href="#http.cookiejar">http.cookiejar</a>
  &#8226;   <a href="#logic.obs_midi_handler">logic.obs_midi_handler</a>
@@ -9073,6 +9198,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#logic.obs_midi_handler">logic.obs_midi_handler</a>
+ &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#obsws_python.baseclient">obsws_python.baseclient</a>
  &#8226;   <a href="#obsws_python.callback">obsws_python.callback</a>
  &#8226;   <a href="#obsws_python.error">obsws_python.error</a>
@@ -9303,7 +9429,7 @@ imported by:
   <a target="code" href="" type="text/plain"><tt>org</tt></a>
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
-    <a href="#pickle">pickle</a>
+    <a href="#copy">copy</a>
 
   </div>
 
@@ -9345,6 +9471,7 @@ imported by:
  &#8226;   <a href="#concurrent.futures.thread">concurrent.futures.thread</a>
  &#8226;   <a href="#contextlib">contextlib</a>
  &#8226;   <a href="#ctypes">ctypes</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#email.utils">email.utils</a>
  &#8226;   <a href="#fnmatch">fnmatch</a>
  &#8226;   <a href="#genericpath">genericpath</a>
@@ -9514,7 +9641,8 @@ imports:
   </div>
   <div class="import">
 imported by:
-    <a href="#importlib.metadata">importlib.metadata</a>
+    <a href="#dotenv.main">dotenv.main</a>
+ &#8226;   <a href="#importlib.metadata">importlib.metadata</a>
  &#8226;   <a href="#importlib.resources._common">importlib.resources._common</a>
  &#8226;   <a href="#importlib.resources._legacy">importlib.resources._legacy</a>
  &#8226;   <a href="#importlib.resources.readers">importlib.resources.readers</a>
@@ -9530,14 +9658,14 @@ imported by:
   <a target="code" href="///C:/Program%20Files/Python311/Lib/pickle.py" type="text/plain"><tt>pickle</tt></a>
 <span class="moduletype">SourceModule</span>  <div class="import">
 imports:
-    <a href="#_compat_pickle">_compat_pickle</a>
+    <a href="#'org.python'">'org.python'</a>
+ &#8226;   <a href="#_compat_pickle">_compat_pickle</a>
  &#8226;   <a href="#_pickle">_pickle</a>
  &#8226;   <a href="#codecs">codecs</a>
  &#8226;   <a href="#copyreg">copyreg</a>
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#io">io</a>
  &#8226;   <a href="#itertools">itertools</a>
- &#8226;   <a href="#org">org</a>
  &#8226;   <a href="#pprint">pprint</a>
  &#8226;   <a href="#re">re</a>
  &#8226;   <a href="#struct">struct</a>
@@ -9837,6 +9965,8 @@ imported by:
  &#8226;   <a href="#base64">base64</a>
  &#8226;   <a href="#csv">csv</a>
  &#8226;   <a href="#dataclasses">dataclasses</a>
+ &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
+ &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
  &#8226;   <a href="#email._encoded_words">email._encoded_words</a>
  &#8226;   <a href="#email._header_value_parser">email._header_value_parser</a>
  &#8226;   <a href="#email.feedparser">email.feedparser</a>
@@ -10010,6 +10140,56 @@ imported by:
 <span class="moduletype">MissingModule</span>  <div class="import">
 imported by:
     <a href="#posix">posix</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="rtmidi"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/rtmidi/__init__.py" type="text/plain"><tt>rtmidi</tt></a>
+<span class="moduletype">Package</span>  <div class="import">
+imports:
+    <a href="#rtmidi._rtmidi">rtmidi._rtmidi</a>
+ &#8226;   <a href="#rtmidi.version">rtmidi.version</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#main.py">main.py</a>
+ &#8226;   <a href="#rtmidi._rtmidi">rtmidi._rtmidi</a>
+ &#8226;   <a href="#rtmidi.version">rtmidi.version</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="rtmidi._rtmidi"></a>
+  <tt>rtmidi._rtmidi</tt> <span class="moduletype"><tt>C:\Users\udinz\AppData\Roaming\Python\Python311\site-packages\rtmidi\_rtmidi.cp311-win_amd64.pyd</tt></span>  <div class="import">
+imports:
+    <a href="#rtmidi">rtmidi</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#rtmidi">rtmidi</a>
+
+  </div>
+
+</div>
+
+<div class="node">
+  <a name="rtmidi.version"></a>
+  <a target="code" href="///C:/Users/udinz/AppData/Roaming/Python/Python311/site-packages/rtmidi/version.py" type="text/plain"><tt>rtmidi.version</tt></a>
+<span class="moduletype">SourceModule</span>  <div class="import">
+imports:
+    <a href="#rtmidi">rtmidi</a>
+
+  </div>
+  <div class="import">
+imported by:
+    <a href="#rtmidi">rtmidi</a>
 
   </div>
 
@@ -10322,6 +10502,7 @@ imports:
 imported by:
     <a href="#asyncio.base_events">asyncio.base_events</a>
  &#8226;   <a href="#asyncio.unix_events">asyncio.unix_events</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#genericpath">genericpath</a>
  &#8226;   <a href="#main.py">main.py</a>
  &#8226;   <a href="#netrc">netrc</a>
@@ -10541,6 +10722,7 @@ imported by:
  &#8226;   <a href="#dataclasses">dataclasses</a>
  &#8226;   <a href="#datetime">datetime</a>
  &#8226;   <a href="#dis">dis</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#email._header_value_parser">email._header_value_parser</a>
  &#8226;   <a href="#email.generator">email.generator</a>
  &#8226;   <a href="#email.iterators">email.iterators</a>
@@ -10684,6 +10866,7 @@ imports:
   <div class="import">
 imported by:
     <a href="#asyncio.windows_utils">asyncio.windows_utils</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
  &#8226;   <a href="#importlib.resources._common">importlib.resources._common</a>
  &#8226;   <a href="#multiprocessing.connection">multiprocessing.connection</a>
  &#8226;   <a href="#multiprocessing.heap">multiprocessing.heap</a>
@@ -11110,6 +11293,10 @@ imported by:
  &#8226;   <a href="#PyQt6.sip">PyQt6.sip</a>
  &#8226;   <a href="#asyncio.staggered">asyncio.staggered</a>
  &#8226;   <a href="#asyncio.timeouts">asyncio.timeouts</a>
+ &#8226;   <a href="#dotenv">dotenv</a>
+ &#8226;   <a href="#dotenv.main">dotenv.main</a>
+ &#8226;   <a href="#dotenv.parser">dotenv.parser</a>
+ &#8226;   <a href="#dotenv.variables">dotenv.variables</a>
  &#8226;   <a href="#functools">functools</a>
  &#8226;   <a href="#importlib.metadata">importlib.metadata</a>
  &#8226;   <a href="#importlib.metadata._meta">importlib.metadata._meta</a>
