@@ -1,94 +1,104 @@
-# **Sekar Wangi Tally Pro Control v4.1**
+# GOLDENBOY - Tally Control Suite
 
-**Sekar Wangi Tally Pro Control** adalah solusi perangkat lunak manajemen lampu Tally profesional yang menjembatani OBS Studio dengan perangkat keras berbasis MIDI (seperti Raspberry Pi Pico atau Arduino). Software ini dirancang dengan antarmuka modern yang terinspirasi dari standar industri penyiaran (Blackmagic Design) untuk memudahkan operator memantau status kamera secara real-time.
+GOLDENBOY adalah aplikasi native PyQt6 untuk kontrol tally broadcast dengan integrasi langsung ke OBS Studio atau vMix, serta output MIDI ke hardware Arduino/Pico untuk lampu tally fisik.
 
-## **🚀 Fitur Utama**
+## Highlight
 
-* **Real-time Synchronization**: Sinkronisasi instan antara status *Scene* di OBS Studio (Program & Preview) dengan lampu Tally fisik.  
-* **Modern Dark UI**: Antarmuka berbasis PyQt6 dengan kontras tinggi, ideal untuk lingkungan kontrol yang gelap (Control Room).  
-* **8-Channel Dashboard**: Monitor visual untuk 8 kamera sekaligus langsung dari layar komputer.  
-* **Smart MIDI Routing**:  
-  * **Note 1 \- 8**: Mengaktifkan lampu **LIVE/PROGRAM** (Merah).  
-  * **Note 11 \- 18**: Mengaktifkan lampu **PREVIEW** (Hijau).  
-* **Auto-Detect Hardware**: Fitur pemindaian otomatis untuk mendeteksi perangkat MIDI (Pico/TinyUSB) yang terhubung.  
-* **Multithreaded Engine**: Mesin pemrosesan terpisah dari UI, memastikan aplikasi tetap responsif tanpa *freeze/lag*.  
-* **Activity Logging**: Konsol log real-time untuk memantau aktivitas koneksi dan pergantian scene.
+- UI modern, responsif, dan animatif (native desktop, bukan webview)
+- Theme engine: `qdarktheme` + icon pack `qtawesome`
+- Integrasi switcher:
+  - OBS Studio (WebSocket v5)
+  - vMix (HTTP API)
+- Mode runtime:
+  - `APP_MODE=production`: wajib hardware MIDI (Arduino/Pico)
+  - `APP_MODE=development`: tanpa hardware, tersedia shortcut test dan klik kartu
+- Database SQLite (`goldenboy_config.db`) untuk menyimpan konfigurasi terakhir
+- Cross-platform: macOS, Windows, Linux (dengan Python 3.10+)
 
-## **🛠️ Teknologi yang Digunakan**
+## Requirement
 
-Aplikasi ini memanggil dan mengintegrasikan beberapa pustaka (libraries) utama:
+Install semua dependency dari file `requirements.txt`:
 
-1. **PyQt6**: Digunakan untuk membangun seluruh *User Interface* (GUI) yang responsif dan estetis.  
-2. **obsws-python (v5)**: Pustaka komunikasi tingkat tinggi untuk berinteraksi dengan OBS Studio melalui protokol WebSocket.  
-3. **Mido (MIDI Objects)**: Digunakan untuk mengolah pesan MIDI yang dikirim ke hardware.  
-4. **python-rtmidi**: Sebagai backend MIDI yang stabil untuk sistem operasi Windows/Linux.  
-5. **Re (Regular Expression)**: Digunakan untuk logika "Smart Matching", yaitu mengambil angka ID kamera secara otomatis dari nama Scene di OBS (misal: "CAM 1" atau "Kamera 2").
-
-## **📋 Persyaratan Sistem**
-
-* **OBS Studio v28.0** atau yang lebih baru.  
-* **OBS WebSocket v5.x** (Sudah terintegrasi di OBS v28 ke atas).  
-* **Hardware Tally**: Raspberry Pi Pico atau Arduino yang mendukung MIDI USB.  
-* **Python 3.9+** (Jika menjalankan dari kode sumber).
-
-## **📥 Panduan Instalasi (Development)**
-
-Jika Anda ingin menjalankan atau mengembangkan kode ini, ikuti langkah berikut:
-
-1. **Clone atau salin kode sumber.**  
-2. **Instal dependensi melalui Terminal/CMD:**  
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Konfigurasi environment (opsional):**  
-   Edit file `.env` untuk mengatur pengaturan OBS WebSocket, MIDI port, dll.
-
-4. **Jalankan aplikasi:**  
-   ```bash
-   python main.py
-   ```
-
-## **🏗️ Struktur Proyek**
-
-```
-SekarWangi_MidiControll/
-├── main.py                 # Entry point aplikasi utama
-├── .env                    # Environment settings
-├── requirements.txt        # Python dependencies
-├── README.md              # Dokumentasi
-├── styles/
-│   └── ui_styles.py       # Styling antarmuka PyQt6
-├── logic/
-│   ├── obs_midi_handler.py # Logika OBS WebSocket & MIDI
-│   └── ui_components.py   # Komponen UI (TallyBox)
-└── arduino/
-    └── client_tally/
-        └── client_tally.ino  # Kode Arduino untuk hardware tally
+```bash
+pip install -r requirements.txt
 ```
 
-## **📦 Cara Membuat File Executable (.EXE)**
+Library yang digunakan:
 
-Untuk mendistribusikan aplikasi ini sebagai software mandiri:
+- PyQt6
+- pyqtdarktheme (Python < 3.12)
+- qdarkstyle (fallback Python >= 3.12)
+- qtawesome
+- obsws-python
+- mido
+- python-rtmidi
+- python-dotenv
+- requests
 
-1. Instal auto-py-to-exe.  
-2. Pilih file `main.py` sebagai script utama.
-3. Konfigurasi build settings sesuai kebutuhan.  
-3. Pilih opsi **"Window Based"** (untuk menyembunyikan konsol hitam).  
-4. Tambahkan ikon (file .ico) untuk hasil yang lebih profesional.  
-5. Klik **Convert**.
+## Konfigurasi Environment
 
-## **📖 Cara Penggunaan**
+Salin `.env.example` menjadi `.env`, lalu sesuaikan:
 
-1. Pastikan OBS Studio sudah terbuka.  
-2. Pergi ke menu Tools \-\> WebSocket Server Settings di OBS. Pastikan Server aktif dan catat passwordnya.  
-3. Hubungkan perangkat Pico Tally Anda ke USB.  
-4. Buka **Sekar Wangi Tally Pro Control**.  
-5. Pilih perangkat MIDI Anda di dropdown (misal: "TinyUSB MIDI").  
-6. Masukkan password OBS WebSocket.  
-7. Klik **HUBUNGKAN**.  
-8. Aplikasi akan mulai mengirim sinyal ke lampu setiap kali Anda mengganti scene di OBS.
+```dotenv
+# OBS
+OBS_HOST=localhost
+OBS_PORT=4455
+OBS_PASSWORD=
 
-**Developed with ❤️ for the Live Production Community.**
+# vMix
+VMIX_HOST=localhost
+VMIX_PORT=8088
 
-*Sekar Wangi \- Keanggunan dalam Teknologi.*
+# Pilihan switcher: obs | vmix
+SWITCHER_TYPE=obs
+
+# MIDI
+MIDI_PORT_NAME=Arduino MIDI
+
+# App
+APP_MODE=development
+CHANNEL_COUNT=8
+```
+
+## Menjalankan Aplikasi
+
+```bash
+python main.py
+```
+
+## Development Test Mode
+
+Saat `APP_MODE=development`, Anda dapat test tanpa Arduino:
+
+- `1..8` -> set channel menjadi PROGRAM
+- `Ctrl+1..8` -> set channel menjadi PREVIEW
+- `Shift+1..8` -> set channel menjadi IDLE
+- Klik kartu channel juga bisa untuk cycle state
+
+## Production Mode (Hardware Arduino)
+
+Saat `APP_MODE=production`:
+
+- Aplikasi akan mencoba konek ke switcher (OBS/vMix)
+- Aplikasi akan membuka MIDI port dari `MIDI_PORT_NAME`
+- Jika MIDI tidak tersedia, koneksi dianggap gagal
+- Mapping MIDI:
+  - PROGRAM: Note `1..N`
+  - PREVIEW: Note `11..(10+N)`
+  - IDLE: kirim `note_off` untuk keduanya
+
+## Struktur Utama Proyek
+
+```text
+main.py
+logic/
+  app_controller.py      # Runtime controller (mode, polling, MIDI, switcher)
+  switcher_clients.py    # Klien OBS/vMix
+  config_store.py        # SQLite config store
+styles/
+  modern_styles.py       # QSS untuk tampilan modern
+```
+
+## Build Notes
+
+Sebelum build executable, pastikan dependency sudah terpasang dari `requirements.txt` agar proses build tidak gagal karena paket kurang.
