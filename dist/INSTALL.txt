@@ -11,16 +11,31 @@
 
 1. **Connect Hardware**: Ensure Arduino/Raspberry Pi Pico is connected via USB
 2. **Configure OBS**: Set up OBS WebSocket server (Tools → WebSocket Server Settings)
-3. **Run Application**: Launch "Sekar Wangi Tally Pro Control"
-4. **Connect**: Enter OBS WebSocket password and select MIDI port
-5. **Monitor**: Watch real-time tally status on the dashboard
+3. **Edit Configuration**: Modify `.env` file in installation directory for custom settings
+4. **Run Application**: Launch "Sekar Wangi Tally Pro Control"
+5. **Connect**: Enter OBS WebSocket password and select MIDI port
+6. **Monitor**: Watch real-time tally status on the dashboard
 
-## ⚙️ Configuration
+## ⚙️ Configuration (.env file)
 
 The application uses `.env` file for configuration. Default settings:
-- OBS_HOST=localhost
-- OBS_PORT=4455
-- MIDI_PORT_NAME=Arduino MIDI
+```
+# OBS WebSocket Settings
+OBS_HOST=localhost
+OBS_PORT=4455
+OBS_PASSWORD=
+
+# vMix API Settings (for future vMix integration)
+VMIX_HOST=localhost
+VMIX_PORT=8088
+```
+
+### Available Configuration Options:
+- **OBS_HOST**: OBS WebSocket server hostname/IP (default: localhost)
+- **OBS_PORT**: OBS WebSocket server port (default: 4455)
+- **OBS_PASSWORD**: OBS WebSocket server password (leave empty if none)
+- **VMIX_HOST**: vMix API server hostname/IP (default: localhost)
+- **VMIX_PORT**: vMix API server port (default: 8088)
 
 ## 🔧 System Requirements
 
@@ -34,6 +49,7 @@ The application uses `.env` file for configuration. Default settings:
 - **MIDI Port Not Found**: Check device manager for Arduino connection
 - **OBS Connection Failed**: Verify WebSocket server is running in OBS
 - **Permission Error**: Run installer as Administrator
+- **Configuration Issues**: Edit .env file in installation directory
 
 ## 📞 Support
 
@@ -42,4 +58,4 @@ For issues or questions:
 - Check README.md for detailed documentation
 
 ---
-**Version**: 4.1 | **Release Date**: April 2026
+**Version**: 4.1 | **Release Date**: April 2026 | **Built with**: PyInstaller + NSIS
