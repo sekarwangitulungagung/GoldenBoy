@@ -42,10 +42,37 @@ echo "pip3 found ✓"
 
 # Install Python dependencies
 echo "Installing Python dependencies..."
+echo "This may take a few minutes..."
+
+# Try to install with --user flag first
 pip3 install --user -r requirements.txt
 
+# Check if installation was successful
 if [ $? -ne 0 ]; then
-    echo "Failed to install Python dependencies."
+    echo "User installation failed, trying system-wide installation..."
+    echo "You may be prompted for sudo password..."
+    sudo pip3 install -r requirements.txt
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to install Python dependencies."
+        echo "Please try installing manually:"
+        echo "pip3 install --user -r requirements.txt"
+        echo "or"
+        echo "sudo pip3 install -r requirements.txt"
+        exit 1
+    fi
+fi
+
+# Verify critical packages are installed
+echo "Verifying installation..."
+python3 -c "import PyQt6; print('PyQt6 ✓')"
+python3 -c "import obsws_python; print('obsws-python ✓')"
+python3 -c "import mido; print('mido ✓')"
+python3 -c "import qtawesome; print('qtawesome ✓')"
+python3 -c "import dotenv; print('python-dotenv ✓')"
+
+if [ $? -ne 0 ]; then
+    echo "Some packages failed to import. Please check your Python installation."
     exit 1
 fi
 

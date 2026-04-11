@@ -43,10 +43,21 @@ Edit this file to configure:
 ## 🆘 Troubleshooting
 
 - **Gatekeeper Block**: Right-click app → Open, then click Open in dialog
+- **ModuleNotFoundError (qtawesome, PyQt6, etc.)**:
+  ```bash
+  # Run the automatic fix script
+  chmod +x fix_dependencies.command
+  ./fix_dependencies.command
+
+  # Or manually reinstall dependencies
+  python3 -m pip install --user --force-reinstall -r requirements.txt
+
+  # Restart Terminal after installation
+  ```
 - **Permission Issues**: Check System Preferences → Security & Privacy → Accessibility
 - **MIDI Not Found**: Check Audio MIDI Setup in Applications/Utilities
 - **OBS Connection**: Verify WebSocket server is running in OBS
-- **Dependencies**: The app will install required packages automatically
+- **Dependencies**: Run `python3 -m pip install --user -r requirements.txt`
 
 ## 📞 Support
 

@@ -36,10 +36,27 @@ echo "Python $PYTHON_VERSION found ✓"
 
 # Install Python dependencies
 echo "Installing Python dependencies..."
+echo "This may take a few minutes..."
+
 python3 -m pip install --user -r requirements.txt
 
 if [ $? -ne 0 ]; then
     echo "Failed to install Python dependencies."
+    echo "Please try installing manually:"
+    echo "python3 -m pip install --user -r requirements.txt"
+    exit 1
+fi
+
+# Verify critical packages are installed
+echo "Verifying installation..."
+python3 -c "import PyQt6; print('PyQt6 ✓')"
+python3 -c "import obsws_python; print('obsws-python ✓')"
+python3 -c "import mido; print('mido ✓')"
+python3 -c "import qtawesome; print('qtawesome ✓')"
+python3 -c "import dotenv; print('python-dotenv ✓')"
+
+if [ $? -ne 0 ]; then
+    echo "Some packages failed to import. Please check your Python installation."
     exit 1
 fi
 

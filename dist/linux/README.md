@@ -102,3 +102,25 @@ styles/
 ## Build Notes
 
 Sebelum build executable, pastikan dependency sudah terpasang dari `requirements.txt` agar proses build tidak gagal karena paket kurang.
+
+## 🆘 Troubleshooting
+
+- **ModuleNotFoundError (qtawesome, PyQt6, etc.)**:
+  ```bash
+  # Run the automatic fix script
+  chmod +x fix_dependencies.sh
+  ./fix_dependencies.sh
+
+  # Or manually reinstall dependencies
+  pip3 install --user --force-reinstall -r requirements.txt
+
+  # Or system-wide (requires sudo)
+  sudo pip3 install -r requirements.txt
+
+  # Restart your terminal session after installation
+  ```
+
+- **Permission Issues**: Make sure USB devices are accessible
+- **MIDI Not Found**: Check `ls /dev/midi*` or `amidi -l`
+- **OBS Connection**: Verify WebSocket server is running in OBS
+- **Dependencies**: Run `pip3 install --user -r requirements.txt`
