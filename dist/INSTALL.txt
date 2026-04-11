@@ -1,0 +1,45 @@
+# Sekar Wangi Tally Pro Control v4.1 - Windows Installation Guide
+
+## 📦 Installation
+
+1. **Download** the installer: `Sekar Wangi Tally Pro Control v4.1 Setup.exe`
+2. **Run as Administrator** (Right-click → Run as administrator)
+3. **Follow the installation wizard**
+4. **Launch** from Desktop shortcut or Start Menu
+
+## 🚀 Quick Start
+
+1. **Connect Hardware**: Ensure Arduino/Raspberry Pi Pico is connected via USB
+2. **Configure OBS**: Set up OBS WebSocket server (Tools → WebSocket Server Settings)
+3. **Run Application**: Launch "Sekar Wangi Tally Pro Control"
+4. **Connect**: Enter OBS WebSocket password and select MIDI port
+5. **Monitor**: Watch real-time tally status on the dashboard
+
+## ⚙️ Configuration
+
+The application uses `.env` file for configuration. Default settings:
+- OBS_HOST=localhost
+- OBS_PORT=4455
+- MIDI_PORT_NAME=Arduino MIDI
+
+## 🔧 System Requirements
+
+- Windows 10/11
+- OBS Studio v28+ with WebSocket plugin
+- Arduino/Raspberry Pi Pico with MIDI support
+- Administrator privileges for installation
+
+## 🆘 Troubleshooting
+
+- **MIDI Port Not Found**: Check device manager for Arduino connection
+- **OBS Connection Failed**: Verify WebSocket server is running in OBS
+- **Permission Error**: Run installer as Administrator
+
+## 📞 Support
+
+For issues or questions:
+- GitHub: https://github.com/sekarwangitulungagung/GoldenBoy
+- Check README.md for detailed documentation
+
+---
+**Version**: 4.1 | **Release Date**: April 2026
