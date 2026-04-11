@@ -6,21 +6,38 @@ from typing import Dict
 
 import qtawesome as qta
 from dotenv import load_dotenv
-from PyQt6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, QSequentialAnimationGroup, Qt, QTimer
-from PyQt6.QtGui import QColor, QKeySequence, QShortcut
+from PyQt6.QtGui import (
+    QAction,
+    QActionGroup,
+    QColor,
+    QDesktopServices,
+    QFont,
+    QKeySequence,
+    QShortcut,
+)
+from PyQt6.QtCore import (
+    QEasingCurve, QPoint, QPropertyAnimation,
+    QSequentialAnimationGroup, QSize, Qt, QTimer, QUrl, pyqtSignal,
+)
 from PyQt6.QtSvgWidgets import QSvgWidget
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
+    QFileDialog,
     QFrame,
+    QGraphicsDropShadowEffect,
     QGraphicsOpacityEffect,
     QGridLayout,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QMainWindow,
+    QMenu,
+    QMenuBar,
+    QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTextEdit,
     QVBoxLayout,
@@ -29,18 +46,22 @@ from PyQt6.QtWidgets import (
 
 from logic.app_controller import AppController, AppRuntimeConfig, load_runtime_config
 from logic.config_store import ConfigStore
-from styles.modern_styles import APP_QSS
-
-
-try:
-    import qdarktheme
-except ImportError:
-    qdarktheme = None
-    import qdarkstyle
+from styles.modern_styles import get_dynamic_qss
 
 
 load_dotenv()
 LOGO_PATH = Path(__file__).parent / "res" / "logo_swm.svg"
+
+
+def _is_dark_mode() -> bool:
+    """Detect OS color scheme. Returns True for Dark, False for Light/Unknown."""
+    try:
+        hints = QApplication.styleHints()
+        scheme = hints.colorScheme()
+        return scheme == Qt.ColorScheme.Dark
+    except AttributeError:
+        palette = QApplication.palette()
+        return palette.window().color().lightness() < 128
 
 
 class SplashScreen(QWidget):
@@ -63,18 +84,32 @@ class SplashScreen(QWidget):
         shell = QFrame()
         shell.setObjectName("SplashShell")
         shell_layout = QVBoxLayout(shell)
-        shell_layout.setContentsMargins(32, 28, 32, 28)
-        shell_layout.setSpacing(14)
+        shell_layout.setContentsMargins(40, 32, 40, 32)
+        shell_layout.setSpacing(10)
         shell_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Logo with drop-shadow glow
+        logo_wrap = QWidget()
+        logo_wrap_layout = QHBoxLayout(logo_wrap)
+        logo_wrap_layout.setContentsMargins(0, 0, 0, 0)
         self.logo = QSvgWidget(str(LOGO_PATH))
-        self.logo.setFixedSize(250, 112)
+        self.logo.setFixedSize(260, 116)
+        glow = QGraphicsDropShadowEffect(self.logo)
+        glow.setBlurRadius(36)
+        glow.setColor(QColor("#47d0ff"))
+        glow.setOffset(0, 0)
+        self.logo.setGraphicsEffect(glow)
+        logo_wrap_layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        self.boot_title = QLabel("GOLDENBOY Control Suite")
+        self.boot_title = QLabel("GOLDENBOY")
         self.boot_title.setObjectName("SplashTitle")
         self.boot_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.boot_subtitle = QLabel("Booting native control interface")
+        self.boot_divider = QFrame()
+        self.boot_divider.setObjectName("SplashDivider")
+        self.boot_divider.setFixedHeight(2)
+
+        self.boot_subtitle = QLabel("Professional Broadcast Control Suite")
         self.boot_subtitle.setObjectName("SplashSubtitle")
         self.boot_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -91,42 +126,93 @@ class SplashScreen(QWidget):
         self.status.setObjectName("SplashStatus")
         self.status.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # Opacity effects for fade-in elements
+        self._title_effect = QGraphicsOpacityEffect(self.boot_title)
+        self._title_effect.setOpacity(0.0)
+        self.boot_title.setGraphicsEffect(self._title_effect)
+
+        self._sub_effect = QGraphicsOpacityEffect(self.boot_subtitle)
+        self._sub_effect.setOpacity(0.0)
+        self.boot_subtitle.setGraphicsEffect(self._sub_effect)
+
+        self._status_effect = QGraphicsOpacityEffect(self.status)
+        self._status_effect.setOpacity(0.0)
+        self.status.setGraphicsEffect(self._status_effect)
+
+        self._divider_effect = QGraphicsOpacityEffect(self.boot_divider)
+        self._divider_effect.setOpacity(0.0)
+        self.boot_divider.setGraphicsEffect(self._divider_effect)
+
         shell_layout.addStretch(1)
-        shell_layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignCenter)
+        shell_layout.addWidget(logo_wrap, alignment=Qt.AlignmentFlag.AlignCenter)
+        shell_layout.addSpacing(12)
         shell_layout.addWidget(self.boot_title)
+        shell_layout.addWidget(self.boot_divider)
+        shell_layout.addSpacing(2)
         shell_layout.addWidget(self.boot_subtitle)
-        shell_layout.addSpacing(8)
+        shell_layout.addSpacing(16)
         shell_layout.addWidget(self.progress_frame)
+        shell_layout.addSpacing(8)
         shell_layout.addWidget(self.status)
         shell_layout.addStretch(1)
 
         outer.addWidget(shell)
-
         self.setWindowOpacity(0.0)
 
     def _start_animation(self) -> None:
+        # Stage 1: Window fade-in (0 → 1, 250ms)
         self.fade = QPropertyAnimation(self, b"windowOpacity", self)
-        self.fade.setDuration(320)
+        self.fade.setDuration(250)
         self.fade.setStartValue(0.0)
         self.fade.setEndValue(1.0)
         self.fade.setEasingCurve(QEasingCurve.Type.OutCubic)
         self.fade.start()
 
-        self.progress_anim = QPropertyAnimation(self.progress_bar, b"maximumWidth", self)
-        self.progress_anim.setDuration(1800)
-        self.progress_anim.setStartValue(0)
-        self.progress_anim.setEndValue(430)
-        self.progress_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
-        self.progress_anim.start()
+        # Stage 2: Title fade-in (delay 200ms)
+        QTimer.singleShot(200, self._fade_in_title)
 
+        # Stage 3: Divider fade-in (delay 350ms)
+        QTimer.singleShot(350, lambda: self._fade_effect(self._divider_effect, 250))
+
+        # Stage 4: Subtitle fade-in (delay 480ms)
+        QTimer.singleShot(480, lambda: self._fade_effect(self._sub_effect, 280))
+
+        # Stage 5: Progress bar expands (delay 600ms, duration 1600ms elastic)
+        QTimer.singleShot(600, self._start_progress)
+
+        # Stage 6: Status fade-in + messages (delay 700ms)
+        QTimer.singleShot(700, lambda: self._fade_effect(self._status_effect, 220))
         messages = [
             "Initializing switcher runtime",
             "Loading SQLite configuration store",
             "Preparing scene and transition panels",
-            "Ready to open configuration phase",
+            "OBS WebSocket driver ready",
+            "Launching control interface…",
         ]
         for index, message in enumerate(messages, start=1):
-            QTimer.singleShot(index * 420, lambda text=message: self.status.setText(text))
+            QTimer.singleShot(700 + index * 290, lambda text=message: self.status.setText(text))
+
+    def _fade_effect(self, effect: QGraphicsOpacityEffect, duration: int) -> None:
+        anim = QPropertyAnimation(effect, b"opacity", self)
+        anim.setDuration(duration)
+        anim.setStartValue(0.0)
+        anim.setEndValue(1.0)
+        anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        anim.start()
+        # keep reference so it isn't GC'd
+        self._anims = getattr(self, "_anims", [])
+        self._anims.append(anim)
+
+    def _fade_in_title(self) -> None:
+        self._fade_effect(self._title_effect, 300)
+
+    def _start_progress(self) -> None:
+        self.progress_anim = QPropertyAnimation(self.progress_bar, b"maximumWidth", self)
+        self.progress_anim.setDuration(1600)
+        self.progress_anim.setStartValue(0)
+        self.progress_anim.setEndValue(500)
+        self.progress_anim.setEasingCurve(QEasingCurve.Type.OutBack)
+        self.progress_anim.start()
 
 
 class AnimatedCard(QFrame):
@@ -159,22 +245,32 @@ class AnimatedCard(QFrame):
 
 
 class SceneCard(QPushButton):
-    def __init__(self, scene_id: int):
+    # Signals for context-menu actions
+    set_as_program = pyqtSignal(str)   # emits scene_name
+    set_as_preview = pyqtSignal(str)   # emits scene_name
+
+    def __init__(self, scene_id: int, scene_name: str = ""):
         super().__init__()
         self.scene_id = scene_id
+        self.scene_name = scene_name or f"SCENE {scene_id}"
         self.scene_state = "idle"
         self.setObjectName("SceneCard")
         self.setProperty("state", "idle")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._show_context_menu)
         self._build_text()
 
     def _build_text(self) -> None:
-        state_text = {
+        state_label = {
             "idle": "STANDBY",
             "preview": "PREVIEW",
             "program": "PROGRAM",
         }.get(self.scene_state, "STANDBY")
-        self.setText(f"SCENE {self.scene_id}\n{state_text}")
+        display_name = self.scene_name
+        if len(display_name) > 16:
+            display_name = display_name[:14] + "…"
+        self.setText(f"{display_name}\n{state_label}")
 
     def set_state(self, state: str) -> None:
         self.scene_state = state
@@ -183,6 +279,20 @@ class SceneCard(QPushButton):
         self.style().unpolish(self)
         self.style().polish(self)
         self.update()
+
+    def _show_context_menu(self, pos) -> None:
+        menu = QMenu(self)
+        menu.setObjectName("SceneContextMenu")
+        act_prog = menu.addAction("Set as Program")
+        act_prev = menu.addAction("Set as Preview")
+        menu.addSeparator()
+        act_info = menu.addAction(f"Scene: {self.scene_name}")
+        act_info.setEnabled(False)
+        chosen = menu.exec(self.mapToGlobal(pos))
+        if chosen == act_prog:
+            self.set_as_program.emit(self.scene_name)
+        elif chosen == act_prev:
+            self.set_as_preview.emit(self.scene_name)
 
 
 class TransitionCard(QPushButton):
@@ -221,17 +331,25 @@ class MainWindow(QMainWindow):
         self.controller.tally_update.connect(self.update_scene_state)
         self.controller.log_signal.connect(self.add_log)
         self.controller.connection_status.connect(self.on_connection_change)
+        self.controller.obs_scenes_loaded.connect(self._update_obs_scenes)
+        self.controller.scene_name_update.connect(self.update_scene_by_name)
 
         self.scene_cards: Dict[int, SceneCard] = {}
+        self.scene_cards_by_name: Dict[str, SceneCard] = {}
         self.transition_cards: list[TransitionCard] = []
         self.config_cards: list[AnimatedCard] = []
         self.config_card_animations: list[QPropertyAnimation] = []
         self.connected = False
         self.log_open = False
+        self._obs_scene_labels: list[QLabel] = []
+        self._theme_preference: str = "system"  # "dark" | "light" | "system"
 
         self.setWindowTitle(os.getenv("APP_NAME", "GOLDENBOY"))
+        self.setMinimumSize(820, 580)
         self.resize(1360, 860)
         self._build_ui()
+        self._build_menu_bar()
+        self._setup_system_theme()
         self._bind_shortcuts()
         self._load_saved_values_into_fields()
         self._load_midi_ports()
@@ -263,9 +381,449 @@ class MainWindow(QMainWindow):
             channel_count=int(data["channel_count"]),
         )
 
+    # ── Theme ──────────────────────────────────────────────────────────────
+
+    def _setup_system_theme(self) -> None:
+        """Apply initial theme and wire dynamic OS theme-change signal."""
+        self._apply_theme(self._theme_preference)
+        try:
+            QApplication.styleHints().colorSchemeChanged.connect(
+                lambda _: self._apply_theme(self._theme_preference)
+            )
+        except AttributeError:
+            pass  # Qt < 6.5 does not emit colorSchemeChanged
+
+    def _apply_theme(self, preference: str) -> None:
+        """Apply QSS at application level so menus and dialogs also receive new theme.
+
+        preference: "dark" | "light" | "system"
+        """
+        self._theme_preference = preference
+        if preference == "dark":
+            dark = True
+        elif preference == "light":
+            dark = False
+        else:
+            dark = _is_dark_mode()
+        qss = get_dynamic_qss(dark)
+        app = QApplication.instance()
+        if app:
+            app.setStyleSheet(qss)  # covers menus, dialogs, tooltips
+        self.setStyleSheet(qss)     # forces window repaint
+        # Re-polish icon tints to match theme luminance
+        icon_col = "#dbe8ff" if dark else "#1a3060"
+        if hasattr(self, "top_reconnect"):
+            self.top_reconnect.setIcon(qta.icon("fa5s.sync-alt", color=icon_col))
+
+    # ── Menu Bar ──────────────────────────────────────────────────────────
+
+    def _build_menu_bar(self) -> None:
+        """Build a full native menu bar covering File, Edit, Section, View, Log, Help."""
+        bar: QMenuBar = self.menuBar()
+
+        # ── File ──────────────────────────────────────────────────────────
+        file_menu: QMenu = bar.addMenu("&File")
+
+        new_action = QAction("&New Configuration", self)
+        new_action.setShortcut(QKeySequence.StandardKey.New)
+        new_action.setStatusTip("Reset all fields to defaults")
+        new_action.triggered.connect(self._menu_new_config)
+        file_menu.addAction(new_action)
+
+        open_action = QAction("&Open Configuration…", self)
+        open_action.setShortcut(QKeySequence.StandardKey.Open)
+        open_action.setStatusTip("Load configuration from a JSON file")
+        open_action.triggered.connect(self._menu_open_config)
+        file_menu.addAction(open_action)
+
+        save_action = QAction("&Save Configuration", self)
+        save_action.setShortcut(QKeySequence.StandardKey.Save)
+        save_action.setStatusTip("Save current configuration to database")
+        save_action.triggered.connect(self._save_config)
+        file_menu.addAction(save_action)
+
+        save_as_action = QAction("Save Configuration &As…", self)
+        save_as_action.setShortcut(QKeySequence.StandardKey.SaveAs)
+        save_as_action.setStatusTip("Export current configuration to a JSON file")
+        save_as_action.triggered.connect(self._menu_save_as_config)
+        file_menu.addAction(save_as_action)
+
+        file_menu.addSeparator()
+
+        import_action = QAction("&Import Settings…", self)
+        import_action.setStatusTip("Import settings from a JSON file")
+        import_action.triggered.connect(self._menu_import_settings)
+        file_menu.addAction(import_action)
+
+        export_action = QAction("&Export Settings…", self)
+        export_action.setStatusTip("Export all settings to a JSON file")
+        export_action.triggered.connect(self._menu_export_settings)
+        file_menu.addAction(export_action)
+
+        file_menu.addSeparator()
+
+        quit_action = QAction("&Quit", self)
+        quit_action.setShortcut(QKeySequence.StandardKey.Quit)
+        quit_action.setStatusTip("Quit GoldenBoy")
+        quit_action.triggered.connect(self.close)
+        file_menu.addAction(quit_action)
+
+        # ── Edit ──────────────────────────────────────────────────────────
+        edit_menu: QMenu = bar.addMenu("&Edit")
+
+        undo_action = QAction("&Undo", self)
+        undo_action.setShortcut(QKeySequence.StandardKey.Undo)
+        undo_action.setEnabled(False)
+        edit_menu.addAction(undo_action)
+
+        redo_action = QAction("&Redo", self)
+        redo_action.setShortcut(QKeySequence.StandardKey.Redo)
+        redo_action.setEnabled(False)
+        edit_menu.addAction(redo_action)
+
+        edit_menu.addSeparator()
+
+        cut_action = QAction("Cu&t", self)
+        cut_action.setShortcut(QKeySequence.StandardKey.Cut)
+        cut_action.triggered.connect(lambda: QApplication.focusWidget() and getattr(QApplication.focusWidget(), "cut", lambda: None)())
+        edit_menu.addAction(cut_action)
+
+        copy_action = QAction("&Copy", self)
+        copy_action.setShortcut(QKeySequence.StandardKey.Copy)
+        copy_action.triggered.connect(lambda: QApplication.focusWidget() and getattr(QApplication.focusWidget(), "copy", lambda: None)())
+        edit_menu.addAction(copy_action)
+
+        paste_action = QAction("&Paste", self)
+        paste_action.setShortcut(QKeySequence.StandardKey.Paste)
+        paste_action.triggered.connect(lambda: QApplication.focusWidget() and getattr(QApplication.focusWidget(), "paste", lambda: None)())
+        edit_menu.addAction(paste_action)
+
+        edit_menu.addSeparator()
+
+        select_all_action = QAction("Select &All", self)
+        select_all_action.setShortcut(QKeySequence.StandardKey.SelectAll)
+        select_all_action.triggered.connect(lambda: QApplication.focusWidget() and getattr(QApplication.focusWidget(), "selectAll", lambda: None)())
+        edit_menu.addAction(select_all_action)
+
+        edit_menu.addSeparator()
+
+        prefs_action = QAction("&Preferences…", self)
+        prefs_action.setShortcut(QKeySequence("Ctrl+,"))
+        prefs_action.setStatusTip("Open application preferences")
+        prefs_action.triggered.connect(self._menu_preferences)
+        edit_menu.addAction(prefs_action)
+
+        # ── Section ───────────────────────────────────────────────────────
+        section_menu: QMenu = bar.addMenu("&Section")
+
+        config_phase_action = QAction("&Configuration Phase", self)
+        config_phase_action.setShortcut(QKeySequence("Ctrl+1"))
+        config_phase_action.setStatusTip("Switch to the configuration phase screen")
+        config_phase_action.triggered.connect(self.back_to_config)
+        section_menu.addAction(config_phase_action)
+
+        dashboard_action = QAction("&Main Dashboard", self)
+        dashboard_action.setShortcut(QKeySequence("Ctrl+2"))
+        dashboard_action.setStatusTip("Switch to the main dashboard screen")
+        dashboard_action.triggered.connect(self.enter_dashboard)
+        section_menu.addAction(dashboard_action)
+
+        section_menu.addSeparator()
+
+        obs_fetch_action = QAction("&Refresh OBS Scenes", self)
+        obs_fetch_action.setShortcut(QKeySequence("Ctrl+R"))
+        obs_fetch_action.setStatusTip("Re-fetch the scene list from OBS WebSocket")
+        obs_fetch_action.triggered.connect(lambda: self.controller.fetch_obs_scenes())
+        section_menu.addAction(obs_fetch_action)
+
+        obs_connect_action = QAction("Connect / Disconnect Switcher", self)
+        obs_connect_action.setStatusTip("Toggle connection to the configured switcher")
+        obs_connect_action.triggered.connect(self.toggle_connection)
+        section_menu.addAction(obs_connect_action)
+
+        section_menu.addSeparator()
+
+        scene_grid_action = QAction("Render Scene &Grid", self)
+        scene_grid_action.setStatusTip("Re-render the scene control grid")
+        scene_grid_action.triggered.connect(self._render_scene_cards)
+        section_menu.addAction(scene_grid_action)
+
+        transition_action = QAction("Render &Transitions", self)
+        transition_action.setStatusTip("Re-render the transition preset cards")
+        transition_action.triggered.connect(self._render_transition_cards)
+        section_menu.addAction(transition_action)
+
+        # ── View ──────────────────────────────────────────────────────────
+        view_menu: QMenu = bar.addMenu("&View")
+
+        fullscreen_action = QAction("Toggle &Full Screen", self)
+        fullscreen_action.setShortcut(QKeySequence.StandardKey.FullScreen)
+        fullscreen_action.setStatusTip("Toggle full-screen mode")
+        fullscreen_action.triggered.connect(self._menu_toggle_fullscreen)
+        view_menu.addAction(fullscreen_action)
+
+        view_menu.addSeparator()
+
+        zoom_in_action = QAction("Zoom &In", self)
+        zoom_in_action.setShortcut(QKeySequence.StandardKey.ZoomIn)
+        zoom_in_action.triggered.connect(lambda: self._menu_zoom(1))
+        view_menu.addAction(zoom_in_action)
+
+        zoom_out_action = QAction("Zoom &Out", self)
+        zoom_out_action.setShortcut(QKeySequence.StandardKey.ZoomOut)
+        zoom_out_action.triggered.connect(lambda: self._menu_zoom(-1))
+        view_menu.addAction(zoom_out_action)
+
+        zoom_reset_action = QAction("&Reset Zoom", self)
+        zoom_reset_action.setShortcut(QKeySequence("Ctrl+0"))
+        zoom_reset_action.triggered.connect(lambda: self._menu_zoom(0))
+        view_menu.addAction(zoom_reset_action)
+
+        view_menu.addSeparator()
+
+        # Theme submenu
+        theme_menu: QMenu = view_menu.addMenu("&Theme")
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+
+        dark_theme_action = QAction("&Dark", self)
+        dark_theme_action.setCheckable(True)
+        dark_theme_action.triggered.connect(lambda: self._apply_theme("dark"))
+        theme_group.addAction(dark_theme_action)
+        theme_menu.addAction(dark_theme_action)
+
+        light_theme_action = QAction("&Light", self)
+        light_theme_action.setCheckable(True)
+        light_theme_action.triggered.connect(lambda: self._apply_theme("light"))
+        theme_group.addAction(light_theme_action)
+        theme_menu.addAction(light_theme_action)
+
+        system_theme_action = QAction("&Follow System", self)
+        system_theme_action.setCheckable(True)
+        system_theme_action.setChecked(True)
+        system_theme_action.triggered.connect(lambda: self._apply_theme("system"))
+        theme_group.addAction(system_theme_action)
+        theme_menu.addAction(system_theme_action)
+
+        view_menu.addSeparator()
+
+        compact_action = QAction("&Compact View", self)
+        compact_action.setStatusTip("Reduce window to minimum comfortable size")
+        compact_action.triggered.connect(lambda: self.resize(900, 640))
+        view_menu.addAction(compact_action)
+
+        expanded_action = QAction("&Expanded View", self)
+        expanded_action.setStatusTip("Expand window to a spacious layout")
+        expanded_action.triggered.connect(lambda: self.resize(1600, 1000))
+        view_menu.addAction(expanded_action)
+
+        # ── Log ───────────────────────────────────────────────────────────
+        log_menu: QMenu = bar.addMenu("&Log")
+
+        show_log_action = QAction("&Show / Hide Log Panel", self)
+        show_log_action.setShortcut(QKeySequence("Ctrl+L"))
+        show_log_action.setStatusTip("Toggle the system log drawer")
+        show_log_action.triggered.connect(self.toggle_log_drawer)
+        log_menu.addAction(show_log_action)
+
+        clear_log_action = QAction("&Clear Log", self)
+        clear_log_action.setShortcut(QKeySequence("Ctrl+Shift+L"))
+        clear_log_action.setStatusTip("Clear all log entries")
+        clear_log_action.triggered.connect(lambda: self.log_area.clear())
+        log_menu.addAction(clear_log_action)
+
+        save_log_action = QAction("Save Log to &File…", self)
+        save_log_action.setStatusTip("Save log contents to a text file")
+        save_log_action.triggered.connect(self._menu_save_log)
+        log_menu.addAction(save_log_action)
+
+        log_menu.addSeparator()
+
+        # Log Level submenu
+        log_level_menu: QMenu = log_menu.addMenu("Log &Level")
+        log_level_group = QActionGroup(self)
+        log_level_group.setExclusive(True)
+        for level in ("Debug", "Info", "Warning", "Error"):
+            lv_action = QAction(level, self)
+            lv_action.setCheckable(True)
+            lv_action.setChecked(level == "Info")
+            lv_action.triggered.connect(lambda checked, lv=level: self.add_log(f"Log level set to {lv}"))
+            log_level_group.addAction(lv_action)
+            log_level_menu.addAction(lv_action)
+
+        log_menu.addSeparator()
+
+        copy_log_action = QAction("&Copy All Log", self)
+        copy_log_action.setStatusTip("Copy all log text to clipboard")
+        copy_log_action.triggered.connect(lambda: QApplication.clipboard().setText(self.log_area.toPlainText()))
+        log_menu.addAction(copy_log_action)
+
+        export_log_action = QAction("&Export Log…", self)
+        export_log_action.setStatusTip("Export log to a file")
+        export_log_action.triggered.connect(self._menu_save_log)
+        log_menu.addAction(export_log_action)
+
+        # ── Help ──────────────────────────────────────────────────────────
+        help_menu: QMenu = bar.addMenu("&Help")
+
+        docs_action = QAction("&Documentation", self)
+        docs_action.setStatusTip("Open GoldenBoy documentation")
+        docs_action.triggered.connect(lambda: self._menu_open_url("https://github.com/", "GoldenBoy Documentation"))
+        help_menu.addAction(docs_action)
+
+        obs_guide_action = QAction("OBS &WebSocket Guide", self)
+        obs_guide_action.setStatusTip("OBS WebSocket protocol documentation")
+        obs_guide_action.triggered.connect(lambda: self._menu_open_url("https://github.com/obsproject/obs-websocket", "OBS WebSocket"))
+        help_menu.addAction(obs_guide_action)
+
+        help_menu.addSeparator()
+
+        about_action = QAction("&About GoldenBoy", self)
+        about_action.setShortcut(QKeySequence.StandardKey.HelpContents)
+        about_action.triggered.connect(self._menu_about)
+        help_menu.addAction(about_action)
+
+        updates_action = QAction("Check for &Updates…", self)
+        updates_action.triggered.connect(lambda: self.add_log("Update check not implemented yet"))
+        help_menu.addAction(updates_action)
+
+        help_menu.addSeparator()
+
+        report_action = QAction("&Report Issue…", self)
+        report_action.triggered.connect(lambda: self._menu_open_url("https://github.com/", "Report Issue"))
+        help_menu.addAction(report_action)
+
+        github_action = QAction("&GitHub Repository…", self)
+        github_action.triggered.connect(lambda: self._menu_open_url("https://github.com/", "GitHub"))
+        help_menu.addAction(github_action)
+
+    # ── Menu action handlers ──────────────────────────────────────────────
+
+    def _menu_new_config(self) -> None:
+        reply = QMessageBox.question(
+            self, "New Configuration",
+            "Reset all configuration fields to defaults?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            self.host_input.setText("localhost")
+            self.port_input.setText("4455")
+            self.password_input.clear()
+            self.switcher_type.setCurrentText("obs")
+            self.add_log("Configuration reset to defaults")
+
+    def _menu_open_config(self) -> None:
+        import json
+        path, _ = QFileDialog.getOpenFileName(self, "Open Configuration", "", "JSON Files (*.json)")
+        if not path:
+            return
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            for key, val in data.items():
+                self.config_store.set_value(key, val)
+            self.add_log(f"Configuration loaded from {path}")
+            self.runtime_config = self._hydrate_runtime_config(self.runtime_config)
+            self._load_saved_values_into_fields()
+        except Exception as exc:
+            QMessageBox.critical(self, "Load Error", f"Failed to load configuration:\n{exc}")
+
+    def _menu_save_as_config(self) -> None:
+        import json as _json
+        path, _ = QFileDialog.getSaveFileName(self, "Save Configuration As", "goldenboy_config.json", "JSON Files (*.json)")
+        if not path:
+            return
+        keys = ["switcher_type", "host", "port", "obs_password", "midi_port_name", "channel_count"]
+        data = self.config_store.get_many({k: "" for k in keys})
+        try:
+            with open(path, "w", encoding="utf-8") as fh:
+                _json.dump(data, fh, indent=2)
+            self.add_log(f"Configuration exported to {path}")
+        except Exception as exc:
+            QMessageBox.critical(self, "Save Error", f"Failed to save configuration:\n{exc}")
+
+    def _menu_import_settings(self) -> None:
+        self._menu_open_config()
+
+    def _menu_export_settings(self) -> None:
+        self._menu_save_as_config()
+
+    def _menu_preferences(self) -> None:
+        QMessageBox.information(self, "Preferences", "Preferences panel coming soon.")
+
+    def _menu_toggle_fullscreen(self) -> None:
+        if self.isFullScreen():
+            self.showNormal()
+        else:
+            self.showFullScreen()
+
+    _zoom_factor: float = 1.0
+
+    def _menu_zoom(self, direction: int) -> None:
+        """direction: 1=in, -1=out, 0=reset"""
+        steps = {1: 1.15, -1: 1 / 1.15, 0: 1.0}
+        factor = steps.get(direction, 1.0)
+        if direction == 0:
+            self._zoom_factor = 1.0
+        else:
+            self._zoom_factor = max(0.6, min(2.5, getattr(self, "_zoom_factor", 1.0) * factor))
+        font = QApplication.font()
+        base = 13
+        font.setPointSizeF(base * self._zoom_factor)
+        QApplication.setFont(font)
+
+    def _menu_save_log(self) -> None:
+        path, _ = QFileDialog.getSaveFileName(self, "Save Log", "goldenboy_log.txt", "Text Files (*.txt)")
+        if not path:
+            return
+        try:
+            with open(path, "w", encoding="utf-8") as fh:
+                fh.write(self.log_area.toPlainText())
+            self.add_log(f"Log saved to {path}")
+        except Exception as exc:
+            QMessageBox.critical(self, "Save Error", f"Failed to save log:\n{exc}")
+
+    def _menu_about(self) -> None:
+        QMessageBox.about(
+            self,
+            "About GoldenBoy",
+            "<h2>GoldenBoy Control Suite</h2>"
+            "<p>Native broadcast control interface for OBS Studio and vMix.</p>"
+            "<p>Version: 2.0 — OBS WebSocket Edition</p>"
+            "<p>Built with PyQt6 and obsws-python.</p>",
+        )
+
+    def _menu_open_url(self, url: str, label: str) -> None:
+        QDesktopServices.openUrl(QUrl(url))
+        self.add_log(f"Opened {label}")
+
+    # ── OBS Scene List ─────────────────────────────────────────────────────
+
+    def _update_obs_scenes(self, scenes: list) -> None:
+        """Rebuild the scene control grid with real OBS scene names."""
+        # Update the info-panel label/badge (if the widget exists in layout)
+        count = len(scenes)
+        if hasattr(self, "obs_scene_count_badge"):
+            self.obs_scene_count_badge.setText(f"{count} scene{'s' if count != 1 else ''}")
+        if hasattr(self, "obs_scenes_hint"):
+            self.obs_scenes_hint.setVisible(count == 0)
+
+        # Rebuild the main scene control grid with real names
+        self._render_scene_cards(scenes=scenes)
+        self.add_log(f"Scene grid rebuilt with {count} OBS scene(s)")
+
+
     def _build_ui(self) -> None:
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+
         root = QWidget()
-        self.setCentralWidget(root)
+        scroll.setWidget(root)
+        self.setCentralWidget(scroll)
+
         layout = QVBoxLayout(root)
         layout.setContentsMargins(20, 18, 20, 18)
         layout.setSpacing(14)
@@ -308,8 +866,6 @@ class MainWindow(QMainWindow):
 
         layout.addWidget(self.top_bar)
         layout.addWidget(self.stack, stretch=1)
-
-        self.setStyleSheet(APP_QSS)
 
     def _build_config_page(self) -> QWidget:
         page = QWidget()
@@ -530,6 +1086,42 @@ class MainWindow(QMainWindow):
 
         page_layout.addWidget(scene_section)
         page_layout.addWidget(transition_section)
+
+        # ── OBS Scene List ─────────────────────────────────────────────
+        self.obs_scenes_section = QFrame()
+        self.obs_scenes_section.setObjectName("OBSScenesPanel")
+        obs_layout = QVBoxLayout(self.obs_scenes_section)
+        obs_layout.setContentsMargins(22, 18, 22, 18)
+        obs_layout.setSpacing(10)
+
+        obs_header = QHBoxLayout()
+        obs_title = QLabel("OBS WebSocket · Scene Configuration")
+        obs_title.setObjectName("SectionTitle")
+        self.obs_scene_count_badge = QLabel("0 scenes")
+        self.obs_scene_count_badge.setObjectName("ModeBadge")
+        self.obs_refresh_btn = QPushButton("Refresh Scenes")
+        self.obs_refresh_btn.setObjectName("GhostBtn")
+        self.obs_refresh_btn.setIcon(qta.icon("fa5s.sync-alt", color="#dbe8ff"))
+        self.obs_refresh_btn.clicked.connect(lambda: self.controller.fetch_obs_scenes())
+        obs_header.addWidget(obs_title)
+        obs_header.addStretch(1)
+        obs_header.addWidget(self.obs_scene_count_badge)
+        obs_header.addWidget(self.obs_refresh_btn)
+
+        self.obs_scenes_grid = QGridLayout()
+        self.obs_scenes_grid.setHorizontalSpacing(10)
+        self.obs_scenes_grid.setVerticalSpacing(8)
+
+        obs_hint = QLabel("Connect to OBS WebSocket to auto-load scene names and count.")
+        obs_hint.setObjectName("HintText")
+        obs_hint.setWordWrap(True)
+        self.obs_scenes_hint = obs_hint
+
+        obs_layout.addLayout(obs_header)
+        obs_layout.addWidget(obs_hint)
+        obs_layout.addLayout(self.obs_scenes_grid)
+
+        page_layout.addWidget(self.obs_scenes_section)
         page_layout.addWidget(self.log_launch_btn, alignment=Qt.AlignmentFlag.AlignRight)
         page_layout.addWidget(self.log_drawer)
         return page
@@ -559,23 +1151,44 @@ class MainWindow(QMainWindow):
         if match >= 0:
             self.midi_selector.setCurrentIndex(match)
 
-    def _render_scene_cards(self) -> None:
+    def _render_scene_cards(self, scenes: list[str] | None = None) -> None:
+        """Rebuild scene control grid.
+
+        If *scenes* is provided (real OBS names), cards are built from that
+        list. Otherwise fall back to the configured numeric channel count.
+        """
         while self.scene_grid.count():
             item = self.scene_grid.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
         self.scene_cards.clear()
+        self.scene_cards_by_name.clear()
 
-        count = int(self.channel_selector.currentText())
-        columns = 2 if count <= 4 else 4 if count <= 8 else 6
-        for scene_id in range(1, count + 1):
-            card = SceneCard(scene_id)
-            card.clicked.connect(lambda _=False, scene=scene_id: self._cycle_scene(scene))
-            row = (scene_id - 1) // columns
-            column = (scene_id - 1) % columns
-            self.scene_grid.addWidget(card, row, column)
-            self.scene_cards[scene_id] = card
+        if scenes is not None:
+            count = len(scenes)
+            columns = 2 if count <= 4 else 4 if count <= 8 else 6
+            for idx, name in enumerate(scenes):
+                scene_id = idx + 1
+                card = SceneCard(scene_id, name)
+                card.clicked.connect(lambda _=False, sid=scene_id: self._cycle_scene(sid))
+                card.set_as_program.connect(self.controller.set_program_scene)
+                card.set_as_preview.connect(self.controller.set_preview_scene)
+                self.scene_grid.addWidget(card, idx // columns, idx % columns)
+                self.scene_cards[scene_id] = card
+                self.scene_cards_by_name[name] = card
+        else:
+            count = int(self.channel_selector.currentText())
+            columns = 2 if count <= 4 else 4 if count <= 8 else 6
+            for scene_id in range(1, count + 1):
+                card = SceneCard(scene_id)
+                card.clicked.connect(lambda _=False, scene=scene_id: self._cycle_scene(scene))
+                card.set_as_program.connect(self.controller.set_program_scene)
+                card.set_as_preview.connect(self.controller.set_preview_scene)
+                row = (scene_id - 1) // columns
+                column = (scene_id - 1) % columns
+                self.scene_grid.addWidget(card, row, column)
+                self.scene_cards[scene_id] = card
 
     def _render_transition_cards(self) -> None:
         while self.transition_grid.count():
@@ -711,10 +1324,17 @@ class MainWindow(QMainWindow):
     def set_active_transition(self, transition_name: str) -> None:
         for card in self.transition_cards:
             card.setChecked(card.transition_name == transition_name)
+        self.controller.trigger_transition(transition_name)
         self.add_log(f"Transition preset selected: {transition_name}")
 
     def update_scene_state(self, scene_id: int, state: str) -> None:
         card = self.scene_cards.get(scene_id)
+        if card:
+            card.set_state(state)
+
+    def update_scene_by_name(self, scene_name: str, state: str) -> None:
+        """Slot for AppController.scene_name_update — updates card by real OBS name."""
+        card = self.scene_cards_by_name.get(scene_name)
         if card:
             card.set_state(state)
 
@@ -728,6 +1348,9 @@ class MainWindow(QMainWindow):
             self.connect_btn.setIcon(qta.icon("fa5s.power-off", color="#fff4f5"))
             self.top_reconnect.setText("Disconnect")
             self.top_reconnect.setIcon(qta.icon("fa5s.power-off", color="#dbe8ff"))
+            # Auto-fetch OBS scenes shortly after connecting
+            if self.runtime_config.switcher_type.lower() == "obs":
+                QTimer.singleShot(600, lambda: self.controller.fetch_obs_scenes())
         else:
             self.status_badge.setText("STANDBY")
             self.status_badge.setProperty("kind", "idle")
@@ -765,13 +1388,22 @@ class MainWindow(QMainWindow):
         self.controller.disconnect()
         event.accept()
 
+    def resizeEvent(self, event) -> None:
+        super().resizeEvent(event)
+        # Reflow OBS scene labels into the optimal column count for the new width
+        if self._obs_scene_labels:
+            cols = max(1, min(6, self.width() // 220))
+            for idx, lbl in enumerate(self._obs_scene_labels):
+                self.obs_scenes_grid.addWidget(lbl, idx // cols, idx % cols)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    if qdarktheme:
-        qdarktheme.setup_theme("dark")
-    else:
-        app.setStyleSheet(qdarkstyle.load_stylesheet_pyqt6())
+    app.setApplicationName(os.getenv("APP_NAME", "GOLDENBOY"))
+    app.setOrganizationName("GoldenBoy")
+
+    # Apply initial system-matched stylesheet before any window is shown
+    app.setStyleSheet(get_dynamic_qss(_is_dark_mode()))
 
     splash = SplashScreen()
     splash.show()

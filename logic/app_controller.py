@@ -22,9 +22,11 @@ class AppRuntimeConfig:
 
 
 class AppController(QObject):
-    tally_update = pyqtSignal(int, str)
+    tally_update = pyqtSignal(int, str)       # (cam_id, state)
+    scene_name_update = pyqtSignal(str, str)  # (scene_name, state) for OBS-named cards
     log_signal = pyqtSignal(str)
     connection_status = pyqtSignal(bool)
+    obs_scenes_loaded = pyqtSignal(list)      # list[str] — scene names
 
     def __init__(self, config: AppRuntimeConfig):
         super().__init__()
@@ -36,6 +38,9 @@ class AppController(QObject):
         self.poll_thread: Optional[threading.Thread] = None
         self.current_program: Optional[int] = None
         self.current_preview: Optional[int] = None
+        self.current_program_name: str = ""
+        self.current_preview_name: str = ""
+        self._active_transition: str = "Cut"
 
     @property
     def is_production(self) -> bool:
@@ -108,6 +113,7 @@ class AppController(QObject):
             time.sleep(0.35)
 
     def _apply_state(self, state: SwitcherState) -> None:
+        # ── Numeric tally (MIDI) ──────────────────────────────────────
         if state.program != self.current_program:
             if self.current_program:
                 self._emit_camera(self.current_program, "idle")
@@ -121,6 +127,21 @@ class AppController(QObject):
             self.current_preview = state.preview
             if state.preview and state.preview != self.current_program:
                 self._emit_camera(state.preview, "preview")
+
+        # ── Named scene tally (OBS scene cards) ───────────────────────
+        if state.program_name != self.current_program_name:
+            if self.current_program_name:
+                self.scene_name_update.emit(self.current_program_name, "idle")
+            self.current_program_name = state.program_name
+            if state.program_name:
+                self.scene_name_update.emit(state.program_name, "program")
+
+        if state.preview_name != self.current_preview_name:
+            if self.current_preview_name and self.current_preview_name != self.current_program_name:
+                self.scene_name_update.emit(self.current_preview_name, "idle")
+            self.current_preview_name = state.preview_name
+            if state.preview_name and state.preview_name != self.current_program_name:
+                self.scene_name_update.emit(state.preview_name, "preview")
 
     def _emit_camera(self, cam_id: int, mode: str) -> None:
         if not 1 <= cam_id <= self.config.channel_count:
@@ -144,10 +165,8 @@ class AppController(QObject):
         if self.is_production:
             self.log_signal.emit("Dev shortcut ignored in production mode")
             return
-
         if mode not in {"program", "preview", "idle"}:
             return
-
         self._emit_camera(cam_id, mode)
         self.log_signal.emit(f"Shortcut trigger CAM {cam_id}: {mode.upper()}")
 
@@ -171,6 +190,106 @@ class AppController(QObject):
 
         self.connection_status.emit(False)
         self.log_signal.emit("Disconnected")
+
+    def fetch_obs_scenes(self) -> list[str]:
+        """Fetch scene list from switcher and emit obs_scenes_loaded."""
+        if not self.connected or not self.switcher:
+            return []
+        try:
+            scenes = self.switcher.get_scenes()
+            self.obs_scenes_loaded.emit(scenes)
+            self.log_signal.emit(f"Scenes loaded: {len(scenes)} scene(s)")
+            return scenes
+        except Exception as exc:
+            self.log_signal.emit(f"Scene fetch error: {exc}")
+            return []
+
+    def set_program_scene(self, scene_name: str) -> None:
+        """Set current program scene in the switcher."""
+        if not self.connected or not self.switcher:
+            self.log_signal.emit("Not connected — cannot set program scene")
+            return
+        try:
+            self.switcher.set_program_scene(scene_name)
+            self.log_signal.emit(f"Program scene → {scene_name}")
+        except Exception as exc:
+            self.log_signal.emit(f"Set program failed: {exc}")
+
+    def set_preview_scene(self, scene_name: str) -> None:
+        """Set current preview scene in the switcher."""
+        if not self.connected or not self.switcher:
+            self.log_signal.emit("Not connected — cannot set preview scene")
+            return
+        try:
+            self.switcher.set_preview_scene(scene_name)
+            self.log_signal.emit(f"Preview scene → {scene_name}")
+        except Exception as exc:
+            self.log_signal.emit(f"Set preview failed: {exc}")
+
+    def trigger_transition(self, transition_name: str = "") -> None:
+        """Execute a scene transition (preview → program).
+
+        In production mode: calls switcher API + sends MIDI cut note.
+        In development mode: simulates the swap locally.
+        """
+        if transition_name:
+            self._active_transition = transition_name
+
+        if self.connected and self.switcher:
+            # Set transition type in OBS/vMix if given
+            if transition_name:
+                try:
+                    self.switcher.set_transition_type(transition_name)
+                except Exception:
+                    pass
+            # Fire the transition
+            try:
+                self.switcher.trigger_transition()
+                self.log_signal.emit(
+                    f"Transition fired: {self._active_transition} (preview → program)"
+                )
+            except Exception as exc:
+                self.log_signal.emit(f"Transition error: {exc}")
+
+            # Send MIDI cut cue in production mode
+            if self.is_production and self.midi_port and self.current_preview:
+                try:
+                    self.midi_port.send(
+                        mido.Message("note_on", note=100, velocity=127)  # cue note
+                    )
+                except Exception:
+                    pass
+        else:
+            # Development mode: simulate swap
+            old_prog = self.current_program
+            old_prog_name = self.current_program_name
+            new_prog = self.current_preview
+            new_prog_name = self.current_preview_name
+
+            if old_prog:
+                self.tally_update.emit(old_prog, "idle")
+            if old_prog_name:
+                self.scene_name_update.emit(old_prog_name, "idle")
+
+            self.current_program = new_prog
+            self.current_program_name = new_prog_name
+
+            if new_prog:
+                self.tally_update.emit(new_prog, "program")
+            if new_prog_name:
+                self.scene_name_update.emit(new_prog_name, "program")
+
+            self.current_preview = old_prog
+            self.current_preview_name = old_prog_name
+            if old_prog:
+                self.tally_update.emit(old_prog, "preview")
+            if old_prog_name:
+                self.scene_name_update.emit(old_prog_name, "preview")
+
+            self.log_signal.emit(
+                f"[DEV] Simulated transition: {self._active_transition} "
+                f"({new_prog_name or new_prog} → program)"
+            )
 
 
 def load_runtime_config() -> AppRuntimeConfig:
